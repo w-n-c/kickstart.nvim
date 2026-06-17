@@ -1,16 +1,35 @@
 --[[
-    If you don't know anything about Lua, I recommend taking some time to read through
-    a guide. One possible example which will only take 10-15 minutes:
+    Learn lua
       - https://learnxinyminutes.com/docs/lua/
-
     After understanding a bit more about Lua, you can use `:help lua-guide` as a
     reference for how Neovim integrates Lua.
 
-    Next, run AND READ `:help`.
     MOST IMPORTANTLY, we provide a keymap "<space>sh" to [s]earch the [h]elp documentation,
     which is very useful when you're not exactly sure of what you're looking for.
     If you experience any errors while trying to install kickstart, run `:checkhealth` for more info.
 
+    NOTE: to quickly run a command in the comments e.g. `:help option-list` do: yank, command mode, <C-r>, ", <enter>
+    leave the extra colon it doesn't matter
+
+--]]
+
+--[[
+
+     TODO:
+     - Configure gitsigns keyboard shortcuts
+     - Refresh on marks and jumplists
+     - <C-n> and <C-<space>>
+     - :abbr
+     - alt to <C-[>
+     - :grep and :cn or somethign newer?
+     - [ jumps e.g. [{ and [I
+
+    NOTE: Keybinds I never remember or are new
+     - * searches word under cursor
+     - <C-q> is new visual block
+     - :te for terminal (is it better than suspending vim?)
+     - { } jump to empty lines
+     - <Space>f to format
 --]]
 
 -- ============================================================
@@ -18,32 +37,18 @@
 -- Core Neovim settings, leaders, options, basic keymaps, basic autocmds
 -- ============================================================
 do
-  -- Enable faster startup by caching compiled Lua modules
-  vim.loader.enable()
-
-  -- Set <space> as the leader key
-  -- See `:help mapleader`
-  --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
+  vim.loader.enable() -- caches compiled Lua modules
   vim.g.mapleader = ' '
   vim.g.maplocalleader = ' '
 
-  -- Set to true if you have a Nerd Font installed and selected in the terminal
-  vim.g.have_nerd_font = true
+  vim.g.have_nerd_font = true -- see nvim-web-devicons plugin below
 
   -- [[ Setting options ]]
-  --  See `:help vim.o`
-  -- NOTE: You can change these options as you wish!
-  --  For more options, you can see `:help option-list`
-
-  -- Make line numbers default
+  --  See `:help vim.o` or for more options, you can see `:help option-list`
   vim.o.number = true
-  vim.o.relativenumber = true
-
-  -- Enable mouse mode, can be useful for resizing splits for example!
-  vim.o.mouse = 'a'
-
-  -- Don't show the mode, since it's already in the status line
-  vim.o.showmode = false
+  vim.o.relativenumber = true -- Toggle off when pairing- use absolute jumps
+  vim.o.mouse = 'a' -- Enable mouse mode to resize splits
+  vim.o.showmode = false -- Don't show the mode, since it's already in the status line
 
   -- Sync clipboard between OS and Neovim.
   --  Schedule the setting after `UiEnter` because it can increase startup-time.
@@ -51,53 +56,26 @@ do
   --  See `:help 'clipboard'`
   vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
 
-  -- Enable break indent
-  vim.o.breakindent = true
+  vim.o.breakindent = true -- vim virtual linewrap matches indent, alt to nowrap
+  vim.o.undofile = true -- Enable persistent undo/redo
+  vim.o.ignorecase = true -- Ignore case in search unless:
+  vim.o.smartcase = true -- \C or capital letters in search term
+  vim.o.signcolumn = 'yes' -- Keep signcolumn on by default (see gitsigns below)
+  vim.o.updatetime = 250 -- Decrease update time
+  vim.o.timeoutlen = 300 -- Decrease mapped sequence wait time
+  vim.o.splitright = true -- Intuitive splits
+  vim.o.splitbelow = true -- In both directions
 
-  -- Enable undo/redo changes even after closing and reopening a file
-  vim.o.undofile = true
-
-  -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
-  vim.o.ignorecase = true
-  vim.o.smartcase = true
-
-  -- Keep signcolumn on by default
-  vim.o.signcolumn = 'yes'
-
-  -- Decrease update time
-  vim.o.updatetime = 250
-
-  -- Decrease mapped sequence wait time
-  vim.o.timeoutlen = 300
-
-  -- Configure how new splits should be opened
-  vim.o.splitright = true
-  vim.o.splitbelow = true
-
-  -- Sets how neovim will display certain whitespace characters in the editor.
-  --  See `:help 'list'`
-  --  and `:help 'listchars'`
-  --
   --  Notice listchars is set using `vim.opt` instead of `vim.o`.
   --  It is very similar to `vim.o` but offers an interface for conveniently interacting with tables.
   --   See `:help lua-options`
   --   and `:help lua-guide-options`
-  vim.o.list = true
+  vim.o.list = true -- configure display of whitespace
   vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
-
-  -- Preview substitutions live, as you type!
-  vim.o.inccommand = 'split'
-
-  -- Show which line your cursor is on
-  vim.o.cursorline = true
-
-  -- Minimal number of screen lines to keep above and below the cursor.
-  vim.o.scrolloff = 10
-
-  -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
-  -- instead raise a dialog asking if you wish to save the current file(s)
-  -- See `:help 'confirm'`
-  vim.o.confirm = true
+  vim.o.inccommand = 'split' -- Preview substitutions live, as you type!
+  vim.o.cursorline = true -- Show which line your cursor is on
+  vim.o.scrolloff = 10 -- Minimal number of screen lines to keep above and below the cursor.
+  vim.o.confirm = true -- Ask to save before failing to close unsaved buffer
 end
 
 -- ============================================================
@@ -145,12 +123,6 @@ do
   -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
   -- or just use <C-\><C-n> to exit terminal mode
   vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
-  -- TIP: Disable arrow keys in normal mode
-  -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
-  -- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
-  -- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
-  -- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
   -- Keybinds to make split navigation easier.
   --  Use CTRL+<hjkl> to switch between windows
@@ -246,8 +218,6 @@ do
   })
 end
 
----Because most plugins are hosted on GitHub, you can use the helper
----function to have less repetition in the following sections.
 ---@param repo string
 ---@return string
 local function gh(repo) return 'https://github.com/' .. repo end
@@ -257,34 +227,20 @@ local function gh(repo) return 'https://github.com/' .. repo end
 -- guess-indent, gitsigns, which-key, colorscheme, todo-comments, mini modules
 -- ============================================================
 do
-  -- [[ Installing and Configuring Plugins ]]
-  --
-  -- To install a plugin simply call `vim.pack.add` with its git url.
-  -- This will download the default branch of the plugin, which will usually be `main` or `master`
-  -- You can also have more advanced specs, which we will talk about later.
-  --
-  -- For most plugins its not enough to install them, you also need to call their `.setup()` to start them.
-  --
-  -- For example, lets say we want to install `guess-indent.nvim` - a plugin for
-  -- automatically detecting and setting the indentation.
-  --
-  -- We first install it from https://github.com/NMAC427/guess-indent.nvim
-  -- and then call its `setup()` function to start it with default settings.
   vim.pack.add { gh 'NMAC427/guess-indent.nvim' }
   require('guess-indent').setup {}
 
   -- Here is a more advanced configuration example that passes options to `gitsigns.nvim`
-  --
   -- See `:help gitsigns` to understand what each configuration key does.
   -- Adds git related signs to the gutter, as well as utilities for managing changes
   vim.pack.add { gh 'lewis6991/gitsigns.nvim' }
   require('gitsigns').setup {
     signs = {
-      add = { text = '+' }, ---@diagnostic disable-line: missing-fields
-      change = { text = '~' }, ---@diagnostic disable-line: missing-fields
-      delete = { text = '_' }, ---@diagnostic disable-line: missing-fields
-      topdelete = { text = '‾' }, ---@diagnostic disable-line: missing-fields
-      changedelete = { text = '~' }, ---@diagnostic disable-line: missing-fields
+      add = { text = '+' },
+      change = { text = '~' },
+      delete = { text = '_' },
+      topdelete = { text = '‾' },
+      changedelete = { text = '~' },
     },
   }
 
@@ -533,6 +489,7 @@ do
   --  - Go to definition
   --  - Find references
   --  - Autocompletion
+
   --  - Symbol Search
   --  - and more!
   --
