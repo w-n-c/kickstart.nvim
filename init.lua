@@ -29,7 +29,8 @@
      - <C-q> is new visual block
      - :te for terminal (is it better than suspending vim?)
      - { } jump to empty lines
-     - <Space>f to format
+     - <leader>f to format
+     - <leader>q for quickfix list
 --]]
 
 -- ============================================================
@@ -578,7 +579,6 @@ do
   local servers = {
     -- clangd = {},
     -- gopls = {},
-    -- pyright = {},
     -- rust_analyzer = {},
     --
     -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -586,8 +586,9 @@ do
     --
     -- But for many setups, the LSP (`ts_ls`) will work just fine
     -- ts_ls = {},
-
-    stylua = {}, -- Used to format Lua code
+    pyright = {}, -- Python LSP
+    ruff = {},    -- Python linter and formatter
+    stylua = {},  -- used to format Lua code
 
     -- Special Lua Config, as recommended by neovim help docs
     lua_ls = {
