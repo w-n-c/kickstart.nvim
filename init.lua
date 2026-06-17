@@ -653,7 +653,9 @@ do
     vim.lsp.config(name, server)
     vim.lsp.enable(name)
   end
+
 end
+
 
 -- ============================================================
 -- SECTION 7: FORMATTING
@@ -756,7 +758,13 @@ do
     },
 
     sources = {
-      default = { 'lsp', 'path', 'snippets' },
+      default = { 'lsp', 'path', 'snippets', 'conjure' },
+      providers = {
+        conjure = {
+          name = 'conjure',
+          module = 'blink.compat.source',
+        }
+      }
     },
 
     snippets = { preset = 'luasnip' },
@@ -789,7 +797,7 @@ do
   vim.pack.add { { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' } }
 
   -- Ensure basic parsers are installed
-  local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+  local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'racket', 'scheme', 'vim', 'vimdoc', }
   require('nvim-treesitter').install(parsers)
 
   ---@param buf integer
@@ -866,3 +874,39 @@ end
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+
+-- ============================================================
+-- SECTION 11: MY PLUGINS
+-- plugins outside the scope of kickstart.nvim
+-- ============================================================
+do
+
+  -- NOTE: Install Racket and required racket packages: 
+  -- `raco pkg install sicp racket-langserver`
+  -- Racket LSP setup (bypassing Mason)
+  local capabilities = require('blink.cmp').get_lsp_capabilities()
+  vim.lsp.config('racket_langserver', {
+    capabilities = capabilities,
+  })
+  vim.lsp.enable('racket_langserver')
+
+  vim.pack.add {
+    gh 'Olical/conjure',
+    gh 'PaterJason/cmp-conjure',  -- The completion source
+    gh 'saghen/blink.compat'      -- The bridge between cmp and blink
+  }
+
+  -- 2. "init" phase: Set globals before Conjure loads
+  vim.g['conjure#mapping#doc_word'] = "K"
+
+  -- 3. "ft" and "config" phases: Use an Autocommand for lazy-loading
+  vim.api.nvim_create_autocmd('FileType', {
+    -- currently only using racket with '#lang scip' mode
+    pattern = { 'clojure', 'fennel', 'racket', 'scheme' }, -- 'python', is an option as well
+    group = vim.api.nvim_create_augroup('conjure_setup', { clear = true }),
+    callback = function()
+      require('conjure.main').main()
+      require('conjure.mapping')['on-filetype']()
+    end,
+  })
+end
