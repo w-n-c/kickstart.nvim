@@ -8,21 +8,23 @@
     which is very useful when you're not exactly sure of what you're looking for.
     If you experience any errors while trying to install kickstart, run `:checkhealth` for more info.
 
-    NOTE: to quickly run a command in the comments e.g. `:help option-list` do: yank, command mode, <C-r>, ", <enter>
-    leave the extra colon it doesn't matter
+    NOTE: to quickly run a command in the comments e.g. `:help option-list` do:
+    yank, command mode, <C-r>, ", <enter> leave the extra colon it doesn't matter
 
 --]]
 
 --[[
 
      TODO:
+     - Look at vim-swap or sideways.vim for rearranging elements in an array
      - Configure gitsigns keyboard shortcuts
      - Refresh on marks and jumplists
      - <C-n> and <C-<space>>
      - :abbr
      - alt to <C-[>
-     - :grep and :cn or somethign newer?
+     - :grep and :cn or something newer?
      - [ jumps e.g. [{ and [I
+     - Learn about vim.diagnostic (top of section 2)
 
     NOTE: Keybinds I never remember or are new
      - * searches word under cursor
@@ -41,7 +43,6 @@ do
   vim.loader.enable() -- caches compiled Lua modules
   vim.g.mapleader = ' '
   vim.g.maplocalleader = ' '
-
   vim.g.have_nerd_font = true -- see nvim-web-devicons plugin below
 
   -- [[ Setting options ]]
@@ -52,12 +53,10 @@ do
   vim.o.showmode = false -- Don't show the mode, since it's already in the status line
 
   -- Sync clipboard between OS and Neovim.
-  --  Schedule the setting after `UiEnter` because it can increase startup-time.
-  --  Remove this option if you want your OS clipboard to remain independent.
-  --  See `:help 'clipboard'`
+  -- Schedule the setting after `UiEnter` because it can increase startup-time.
   vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
 
-  vim.o.breakindent = true -- vim virtual linewrap matches indent, alt to nowrap
+  vim.o.breakindent = true -- Vim virtual linewrap matches indent, alt to nowrap
   vim.o.undofile = true -- Enable persistent undo/redo
   vim.o.ignorecase = true -- Ignore case in search unless:
   vim.o.smartcase = true -- \C or capital letters in search term
@@ -87,9 +86,7 @@ do
   -- [[ Basic Keymaps ]]
   --  See `:help vim.keymap.set()`
 
-  -- Clear highlights on search when pressing <Esc> in normal mode
-  --  See `:help hlsearch`
-  vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+  vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>') -- Clear highlights
 
   -- Diagnostic Config & Keymaps
   --  See `:help vim.diagnostic.Opts`
@@ -98,11 +95,9 @@ do
     severity_sort = true,
     float = { border = 'rounded', source = 'if_many' },
     underline = { severity = { min = vim.diagnostic.severity.WARN } },
-
     -- Can switch between these as you prefer
     virtual_text = true, -- Text shows up at the end of the line
     virtual_lines = false, -- Text shows up underneath the line, with virtual lines
-
     -- Auto open the float, so you can easily read the errors when jumping with `[d` and `]d`
     jump = {
       on_jump = function(_, bufnr)
@@ -114,31 +109,17 @@ do
       end,
     },
   }
+  vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist,
+    { desc = 'Open diagnostic [Q]uickfix list' })
 
-  vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-
-  -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
-  -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
-  -- is not what someone will guess without a bit more experience.
-  --
-  -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
-  -- or just use <C-\><C-n> to exit terminal mode
+  -- NOTE: This won't work in all terminal emulators/tmux/etc, use <C-\><C-n> as backup
   vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
-  -- Keybinds to make split navigation easier.
-  --  Use CTRL+<hjkl> to switch between windows
-  --
   --  See `:help wincmd` for a list of all window commands
+  -- NOTE: May not work in some terminals, use <C-S-[x]> instead
   vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
   vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
   vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
   vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-
-  -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
-  -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
-  -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
-  -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
-  -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
   -- [[ Basic Autocommands ]]
   --  See `:help lua-guide-autocommands`
@@ -158,10 +139,6 @@ end
 -- vim.pack intro, build hooks
 -- ============================================================
 do
-  -- [[ Intro to `vim.pack` ]]
-  -- `vim.pack` is a new plugin manager built into Neovim,
-  --  which provides a Lua interface for installing and managing plugins.
-  --
   --  See `:help vim.pack`, `:help vim.pack-examples` or the
   --  excellent blog post from the creator of vim.pack and mini.nvim:
   --  https://echasnovski.com/blog/2026-03-13-a-guide-to-vim-pack
@@ -171,14 +148,8 @@ do
   --
   --  To update plugins, run
   --    :lua vim.pack.update()
-  --
-  --
-  --  Throughout the rest of the config there will be examples
-  --  of how to install and configure plugins using `vim.pack`.
-  --
-  --  In this section we set up some autocommands to run build
-  --  steps for certain plugins after they are installed or updated.
 
+  -- Many plugins need to run a build step after installation
   local function run_build(name, cmd, cwd)
     local result = vim.system(cmd, { cwd = cwd }):wait()
     if result.code ~= 0 then
