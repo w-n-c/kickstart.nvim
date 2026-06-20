@@ -16,9 +16,11 @@
 --[[
 
      TODO:
+     - Review mini.nvim modules
+     - [x] Configure gitsigns keyboard shortcuts (used Kickstart plugin)
      - Look at vim-swap or sideways.vim for rearranging elements in an array
-     - Configure gitsigns keyboard shortcuts
-     - Refresh on marks and jumplists
+     - Learn Telescope nav
+     - [x] Refresh on marks and jumplists
      - <C-n> and <C-<space>>
      - :abbr
      - alt to <C-[>
@@ -27,7 +29,15 @@
      - Learn about vim.diagnostic (top of section 2)
 
     NOTE: Keybinds I never remember or are new
-     - * searches word under cursor
+     - Telescope keybinds begin around 377
+     - mx 'x to mark and jump
+     - [x]<C-o> <C-i> to nav jumplist, :jumps to view and get value for [x]
+     - <C-6>/<C-^> will jump to last buffer
+     - ]c/[c next & previous git change
+     - vim maintains a changelist distinct from the jumplist
+       - g;/g, to move via changelist, gi to drop straight into last insert mode
+       - `. to move to exact character of last change
+     - */# searches whole word under cursor g*/g# partial matches
      - <C-q> is new visual block
      - :te for terminal (is it better than suspending vim?)
      - { } jump to empty lines
@@ -109,8 +119,7 @@ do
       end,
     },
   }
-  vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist,
-    { desc = 'Open diagnostic [Q]uickfix list' })
+  vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
   -- NOTE: This won't work in all terminal emulators/tmux/etc, use <C-\><C-n> as backup
   vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
@@ -265,20 +274,21 @@ do
     MiniIcons.mock_nvim_web_devicons()
   end
 
+  -- Disabled for now,  miniai overrides paredit operators and disabling via flag does not seem to work
   -- Better Around/Inside textobjects
   --
   -- Examples:
   --  - va)  - [V]isually select [A]round [)]paren
   --  - yiiq - [Y]ank [I]nside [I]+1 [Q]uote
   --  - ci'  - [C]hange [I]nside [']quote
-  require('mini.ai').setup {
-    -- NOTE: Avoid conflicts with the built-in incremental selection mappings on Neovim>=0.12 (see `:help treesitter-incremental-selection`)
-    mappings = {
-      around_next = 'aa',
-      inside_next = 'ii',
-    },
-    n_lines = 500,
-  }
+  -- require('mini.ai').setup {
+  --   -- NOTE: Avoid conflicts with the built-in incremental selection mappings on Neovim>=0.12 (see `:help treesitter-incremental-selection`)
+  --   mappings = {
+  --     around_next = 'aa',
+  --     inside_next = 'ii',
+  --   },
+  --   n_lines = 500,
+  -- }
 
   -- Add/delete/replace surroundings (brackets, quotes, etc.)
   --
@@ -558,8 +568,8 @@ do
     -- But for many setups, the LSP (`ts_ls`) will work just fine
     -- ts_ls = {},
     pyright = {}, -- Python LSP
-    ruff = {},    -- Python linter and formatter
-    stylua = {},  -- used to format Lua code
+    ruff = {}, -- Python linter and formatter
+    stylua = {}, -- used to format Lua code
 
     -- Special Lua Config, as recommended by neovim help docs
     lua_ls = {
@@ -624,9 +634,7 @@ do
     vim.lsp.config(name, server)
     vim.lsp.enable(name)
   end
-
 end
-
 
 -- ============================================================
 -- SECTION 7: FORMATTING
@@ -734,8 +742,8 @@ do
         conjure = {
           name = 'conjure',
           module = 'blink.compat.source',
-        }
-      }
+        },
+      },
     },
 
     snippets = { preset = 'luasnip' },
@@ -768,7 +776,7 @@ do
   vim.pack.add { { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' } }
 
   -- Ensure basic parsers are installed
-  local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'racket', 'scheme', 'vim', 'vimdoc', }
+  local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'racket', 'scheme', 'vim', 'vimdoc' }
   require('nvim-treesitter').install(parsers)
 
   ---@param buf integer
@@ -832,10 +840,10 @@ do
   --
   require 'kickstart.plugins.autopairs'
   require 'kickstart.plugins.neo-tree'
+  require 'kickstart.plugins.gitsigns'
   -- require 'kickstart.plugins.debug'
   -- require 'kickstart.plugins.indent_line'
   -- require 'kickstart.plugins.lint'
-  -- require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
 
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --
@@ -847,33 +855,45 @@ end
 -- vim: ts=2 sts=2 sw=2 et
 
 -- ============================================================
--- SECTION 11: MY PLUGINS
--- plugins outside the scope of kickstart.nvim
+-- SECTION 11: LISP(y)
+-- plugins to support LSP, REPL, and editing LISPy langs
 -- ============================================================
 do
-
-  -- NOTE: Install Racket and required racket packages: 
+  -- NOTE: Install Racket and required racket packages:
   -- `raco pkg install sicp racket-langserver`
   -- Racket LSP setup (bypassing Mason)
   local capabilities = require('blink.cmp').get_lsp_capabilities()
   vim.lsp.config('racket_langserver', {
     capabilities = capabilities,
   })
-  vim.lsp.enable('racket_langserver')
+  vim.lsp.enable 'racket_langserver'
 
   vim.pack.add {
     gh 'Olical/conjure',
-    gh 'PaterJason/cmp-conjure',  -- The completion source
-    gh 'saghen/blink.compat'      -- The bridge between cmp and blink
+    gh 'PaterJason/cmp-conjure', -- The completion source
+    gh 'saghen/blink.compat', -- The bridge between cmp and blink
+    gh 'julienvincent/nvim-paredit',
   }
 
-  -- 2. "init" phase: Set globals before Conjure loads
-  vim.g['conjure#mapping#doc_word'] = "K"
+  local lisp_fts = { 'clojure', 'fennel', 'racket', 'scheme' }
+  local paredit = require 'nvim-paredit'
+  paredit.setup {
+    use_default_keys = true,
+    filetypes = lisp_fts,
+    languages = {
+      racket = {
+        whitespace_chars = { ' ', ',' },
+      },
+    },
+    keys = {
+      ['<localleader>W'] = { paredit.api.wrap_enclosing_form_under_cursor, 'Wrap Form' },
+    },
+  }
 
-  -- 3. "ft" and "config" phases: Use an Autocommand for lazy-loading
+  vim.g['conjure#mapping#doc_word'] = 'K'
   vim.api.nvim_create_autocmd('FileType', {
     -- currently only using racket with '#lang scip' mode
-    pattern = { 'clojure', 'fennel', 'racket', 'scheme' }, -- 'python', is an option as well
+    pattern = lisp_fts, -- 'python', is an option as well
     group = vim.api.nvim_create_augroup('conjure_setup', { clear = true }),
     callback = function()
       require('conjure.main').main()
